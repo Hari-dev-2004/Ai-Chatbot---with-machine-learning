@@ -6,19 +6,19 @@ Step2:Open files in any code editor (Vs code is preffered)
 
 Step3:Install python libraries using terminal or poweshell 
 
-                   {(pip install tensorflow)
+                   pip install tensorflow
                    
-                  (pip install numpy)
+                  pip install numpy
                   
-                   (pip install keras) 
+                   pip install keras
                    
-                  (pip install flask)
+                  pip install flask
                   
-                   (pip install sklearn)
+                   pip install sklearn
                    
-                   (pip install random)
+                   pip install random
                    
-                  (pip install joblib}
+                  pip install joblib
                   
 step4: run train.py or train.ipynb 
 
