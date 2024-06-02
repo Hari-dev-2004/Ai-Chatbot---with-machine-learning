@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #e6e9f0 0%, #eef1f5 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .circle {
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, #f25b72, rgb(248, 158, 85) 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(248, 62, 62, 0.5);
+        }
+
+        .text {
+            font-size: 24px;
+            font-weight: bold;
+            margin-left: 10px;
+            background: linear-gradient(to right, #42f1f4, #a2ea59, #fbbc05, #ea4335);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .container {
+            width: 800px;
+            height: 600px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #conversation {
+            height: 500px;
+            overflow-y: scroll;
+            padding: 10px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            max-width: 70%;
+        }
+
+        .user-message {
+            background-color: #DCF8C6;
+            align-self: flex-end;
+        }
+
+        .bot-message {
+            background-color: #F2F2F2;
+            align-self: flex-start;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-top: 1px solid #ccc;
+        }
+
+        .listening {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+        #userInput {
+            width: calc(100% - 100px);
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: linear-gradient(#f25b72, rgb(248, 158, 85));
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .toggle-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-label {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .ai-emoji {
+            width: 30px;
+            height: 30px;
+            margin-left: 5px;
+            background-color: yellow;
+            border-radius: 50%;
+            animation: blink 1s infinite alternate;
+        }
+
+        @keyframes blink {
+            0% {
+                background-color: yellow;
+            }
+
+            50% {
+                background-color: black;
+            }
+
+            100% {
+                background-color: yellow;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="logo">
+        <div class="circle"></div>
+        <div class="text">EchoAi</div>
+    </div>
+
+    <div class="container">
+        <div id="conversation" class="conversation">
+            <!-- Messages will be displayed here -->
+        </div>
+        <div class="input-container">
+            <button id="speechRecognition">🎤</button>
+            <input type="text" id="userInput" placeholder="Type your message"/>
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+    <div class="toggle-container">
+        <label class="toggle-label" for="toggleSpeak">EchoPowered</label>
+        <label class="toggle-switch">
+            <input type="checkbox" id="toggleSpeak">
+            <span class="toggle-slider"></span>
+        </label>
+        <div class="ai-emoji"></div>
+    </div>
+    <script>
+window.onload = function() {
+    document.getElementById("userInput").focus();
+};
+
+const conversation = document.getElementById('conversation');
+const userInput = document.getElementById('userInput');
+const sendButton = document.getElementById('sendButton');
+const speechRecognitionButton = document.getElementById('speechRecognition');
+const toggleSpeak = document.getElementById('toggleSpeak');
+const aiEmoji = document.querySelector('.ai-emoji');
+let speakEnabled = false;
+let isListening = false;
+let recognition = null;
+
+// Function to initialize speech recognition
+function initializeSpeechRecognition() {
+    recognition = new webkitSpeechRecognition();
+
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript;
+        sendMessage('You', transcript);
+        fetchBotResponse(transcript);
+    };
+
+    recognition.onspeechend = () => {
+        if (isListening) {
+            recognition.start(); // Restart speech recognition after response
+        }
+    };
+
+    speechRecognitionButton.addEventListener('click', toggleListening);
+}
+
+initializeSpeechRecognition();
+
+// Function to toggle listening state and button appearance
+function toggleListening() {
+    isListening = !isListening; // Toggle listening state
+
+    // Toggle recognition start/stop
+    if (isListening) {
+        recognition.start();
+        speechRecognitionButton.classList.add('listening'); // Add listening class
+    } else {
+        recognition.stop();
+        speechRecognitionButton.classList.remove('listening'); // Remove listening class
+    }
+}
+
+// Send user input to server when Enter key is pressed
+userInput.addEventListener('keydown', (event) => {
+    if (event.keyCode === 13) { // 13 is the key code for Enter key
+        sendUserInput();
+    }
+});
+
+// Send user input to server when Send button is clicked
+sendButton.addEventListener('click', sendUserInput);
+
+// Function to send user input to server
+function sendUserInput() {
+    const text = userInput.value.trim();
+    if (text) {
+        sendMessage('You', text);
+        fetchBotResponse(text);
+        userInput.value = '';
+    }
+}
+
+// Toggle Speak Button
+toggleSpeak.addEventListener('change', () => {
+    speakEnabled = toggleSpeak.checked;
+    aiEmoji.style.display = speakEnabled ? 'inline-block' : 'none';
+
+});
+
+// Fetch bot response from server
+function fetchBotResponse(text) {
+    fetch('/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        const botResponse = data.response;
+        sendMessage('Bot', botResponse);
+        if (speakEnabled) {
+            speakResponse(botResponse);
+        }
+    })
+    .catch((error) => console.error(error));
+}
+
+// Display messages in the conversation
+function sendMessage(sender, message) {
+    const messageElement = document.createElement('div');
+    messageElement.textContent = `${sender}: ${message}`;
+    messageElement.classList.add('message');
+    messageElement.classList.add(`${sender.toLowerCase()}-message`);
+    conversation.appendChild(messageElement);
+    conversation.scrollTop = conversation.scrollHeight; // Auto-scroll to bottom
+}
+
+// Speak the bot's response
+function speakResponse(response) {
+    const utterance = new SpeechSynthesisUtterance(response);
+    utterance.onend = () => {
+        if (!speakEnabled) {
+            recognition.start(); // Restart speech recognition after bot's response is finished
+        }
+    };
+    window.speechSynthesis.speak(utterance);
+}
+
+    </script>
+</body>
+</html>
